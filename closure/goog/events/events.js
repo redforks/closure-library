@@ -981,3 +981,13 @@ goog.debug.entryPointRegistry.register(
       goog.events.handleBrowserEvent_ = transformer(
           goog.events.handleBrowserEvent_);
     });
+
+
+/**
+ * @param {function(!Function): !Function} fn Function to wrap default browser
+ * event handler, returns the wrapped event handler as default browser event
+ * handler.
+ */
+goog.events.wrapBrowserEventEntryPoint = function(fn) {
+  goog.events.handleBrowserEvent_ = fn(goog.events.handleBrowserEvent_);
+};
