@@ -72,15 +72,23 @@ goog.testing.events.EventObserver.prototype.handleEvent = function(e) {
 
 /**
  * @param {string=} opt_type If given, only return events of this type.
+ * @param {boolean=} opt_clear If given, clear internal logs of that type.
  * @return {!Array<!goog.events.Event>} The events handled, oldest to newest.
  */
-goog.testing.events.EventObserver.prototype.getEvents = function(opt_type) {
+goog.testing.events.EventObserver.prototype.getEvents = function(opt_type,
+    opt_clear) {
   var events = goog.array.clone(this.events_);
 
   if (opt_type) {
     events = goog.array.filter(events, function(event) {
       return event.type == opt_type;
     });
+
+    if (opt_clear) {
+      goog.array.removeAllIf(this.events_, function(event) {
+        return event.type == opt_type;
+      });
+    }
   }
 
   return events;
