@@ -55,6 +55,7 @@ goog.inherits(goog.net.XhrIoPool, goog.structs.PriorityPool);
  */
 goog.net.XhrIoPool.prototype.createObject = function() {
   var xhrIo = new goog.net.XhrIo();
+  xhrIo.setWithCredentials(true);
   var headers = this.headers_;
   if (headers) {
     headers.forEach(function(value, key) {
