@@ -17,7 +17,6 @@ goog.provide('goog.Promise');
 goog.require('goog.Thenable');
 goog.require('goog.asserts');
 goog.require('goog.async.run');
-goog.require('goog.async.throwException');
 goog.require('goog.debug.Error');
 goog.require('goog.promise.Resolver');
 
@@ -940,7 +939,7 @@ goog.Promise.addUnhandledRejection_ = function(promise, reason) {
  * @type {function(*)}
  * @private
  */
-goog.Promise.handleRejection_ = goog.async.throwException;
+goog.Promise.handleRejection_ = goog.nullFunction;
 
 
 /**
