@@ -15,7 +15,6 @@
 goog.provide('goog.async.run');
 
 goog.require('goog.async.nextTick');
-goog.require('goog.async.throwException');
 goog.require('goog.testing.watchers');
 
 
@@ -111,11 +110,7 @@ goog.async.run.processWorkQueue = function() {
     goog.async.run.workQueue_ = [];
     for (var i = 0; i < workItems.length; i++) {
       var workItem = workItems[i];
-      try {
-        workItem.fn.call(workItem.scope);
-      } catch (e) {
-        goog.async.throwException(e);
-      }
+      workItem.fn.call(workItem.scope);
     }
   }
 
