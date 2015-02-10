@@ -1101,7 +1101,7 @@ goog.addDependency('testing/ui/rendererharness.js', ['goog.testing.ui.RendererHa
 goog.addDependency('testing/ui/style.js', ['goog.testing.ui.style'], ['goog.array', 'goog.asserts', 'goog.dom', 'goog.dom.classlist', 'goog.testing.asserts'], false);
 goog.addDependency('testing/ui/style_test.js', ['goog.testing.ui.styleTest'], ['goog.dom', 'goog.testing.jsunit', 'goog.testing.ui.style'], false);
 goog.addDependency('testing/watchers.js', ['goog.testing.watchers'], [], false);
-goog.addDependency('timer/timer.js', ['goog.Timer'], ['goog.Promise', 'goog.events.EventTarget'], false);
+goog.addDependency('timer/timer.js', ['goog.Timer'], ['goog.Promise', 'goog.debug.entryPointRegistry', 'goog.events.EventTarget', 'goog.functions'], false);
 goog.addDependency('timer/timer_test.js', ['goog.TimerTest'], ['goog.Promise', 'goog.Timer', 'goog.events', 'goog.testing.MockClock', 'goog.testing.jsunit'], false);
 goog.addDependency('tweak/entries.js', ['goog.tweak.BaseEntry', 'goog.tweak.BasePrimitiveSetting', 'goog.tweak.BaseSetting', 'goog.tweak.BooleanGroup', 'goog.tweak.BooleanInGroupSetting', 'goog.tweak.BooleanSetting', 'goog.tweak.ButtonAction', 'goog.tweak.NumericSetting', 'goog.tweak.StringSetting'], ['goog.array', 'goog.asserts', 'goog.log', 'goog.object'], false);
 goog.addDependency('tweak/entries_test.js', ['goog.tweak.BaseEntryTest'], ['goog.testing.MockControl', 'goog.testing.jsunit', 'goog.tweak.testhelpers'], false);

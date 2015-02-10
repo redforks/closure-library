@@ -22,7 +22,9 @@
 goog.provide('goog.Timer');
 
 goog.require('goog.Promise');
+goog.require('goog.debug.entryPointRegistry');
 goog.require('goog.events.EventTarget');
+goog.require('goog.functions');
 
 
 
@@ -258,6 +260,30 @@ goog.Timer.TICK = 'tick';
 
 
 /**
+ * Helper function that is overrided to protect callbacks with entry point
+ * monitor if the application monitors entry points.
+ * @param {function()} callback Callback function to fire as soon as possible.
+ * @return {function()} The wrapped callback.
+ * @private
+ */
+goog.Timer.callOnceWrapCallback_ = goog.functions.identity;
+
+
+// Register the callback function as an entry point, so that it can be
+// monitored for exception handling, etc. This has to be done in this file
+// since it requires special code to handle all browsers.
+goog.debug.entryPointRegistry.register(
+    /**
+     * @param {function(!Function): !Function} transformer The transforming
+     *     function.
+     */
+    function(transformer) {
+      goog.Timer.callOnceWrapCallback_ = transformer;
+    });
+
+
+
+/**
  * Calls the given function once, after the optional pause.
  *
  * The function is always called asynchronously, even if the delay is 0. This
@@ -290,7 +316,7 @@ goog.Timer.callOnce = function(listener, opt_delay, opt_handler) {
     return goog.Timer.INVALID_TIMEOUT_ID_;
   } else {
     return goog.Timer.defaultTimerObject.setTimeout(
-        listener, opt_delay || 0);
+        goog.Timer.callOnceWrapCallback_(listener), opt_delay || 0);
   }
 };
 
