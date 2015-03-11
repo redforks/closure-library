@@ -1226,7 +1226,7 @@ goog.ui.Component.prototype.indexOfChild = function(child) {
  *    or the child component itself.
  * @param {boolean=} opt_unrender If true, calls {@code exitDocument} on the
  *    removed child component, and detaches its DOM from the document.
- * @return {!goog.ui.Component} The removed component, if any.
+ * @return {goog.ui.Component} The removed component, if any.
  */
 goog.ui.Component.prototype.removeChild = function(child, opt_unrender) {
   if (child) {
@@ -1272,7 +1272,7 @@ goog.ui.Component.prototype.removeChild = function(child, opt_unrender) {
  * @param {number} index 0-based index of the child to remove.
  * @param {boolean=} opt_unrender If true, calls {@code exitDocument} on the
  *    removed child component, and detaches its DOM from the document.
- * @return {!goog.ui.Component} The removed component, if any.
+ * @return {goog.ui.Component} The removed component, if any.
  */
 goog.ui.Component.prototype.removeChildAt = function(index, opt_unrender) {
   // removeChild(null) will throw error.
