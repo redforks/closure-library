@@ -455,14 +455,9 @@ goog.events.unlistenByKey = function(key) {
       // Null the src, just because this is simple to do (and useful
       // for IE <= 7).
       listenerMap.src = null;
-      if (!goog.Compiled) {
-        // if not delete, failed mocha leak detect
-        delete src[goog.events.LISTENER_MAP_PROP_];
-      } else {
-        // We don't use delete here because IE does not allow delete
-        // on a window object.
-        src[goog.events.LISTENER_MAP_PROP_] = null;
-      }
+      // We don't use delete here because IE does not allow delete
+      // on a window object.
+      src[goog.events.LISTENER_MAP_PROP_] = null;
     }
   } else {
     listener.markAsRemoved();
