@@ -222,7 +222,7 @@ goog.testing.dom.nodeFilter_ = function(node) {
  */
 goog.testing.dom.getExpectedText_ = function(node) {
   // Strip off the browser specifications.
-  return node.nodeValue.match(/^(\[\[.+\]\])?(.*)/)[2];
+  return node.nodeValue.match(/^(\[\[.+\]\])?([\s\S]*)/)[2];
 };
 
 
@@ -387,12 +387,18 @@ goog.testing.dom.assertHtmlContentsMatch = function(htmlPattern, actual,
  * others.
  * @param {string} htmlPattern The pattern to match.
  * @param {string} actual The html to check.
+ * @param {boolean=} opt_strictAttributes If false, attributes that appear in
+ *     htmlPattern must be in actual, but actual can have attributes not
+ *     present in htmlPattern. If true, htmlPattern and actual must have the
+ *     same set of attributes. Default is false.
  */
-goog.testing.dom.assertHtmlMatches = function(htmlPattern, actual) {
+goog.testing.dom.assertHtmlMatches = function(htmlPattern, actual,
+    opt_strictAttributes) {
   var div = goog.dom.createDom(goog.dom.TagName.DIV);
   div.innerHTML = actual;
 
-  goog.testing.dom.assertHtmlContentsMatch(htmlPattern, div);
+  goog.testing.dom.assertHtmlContentsMatch(
+      htmlPattern, div, opt_strictAttributes);
 };
 
 
@@ -523,8 +529,9 @@ goog.testing.dom.assertAttributesEqual_ = function(errorSuffix,
         actualAttribute);
     assertEquals('Expected attribute ' + expectedName +
         ' has a different value ' + errorSuffix,
-        expectedValue,
-        goog.testing.dom.getAttributeValue_(actualElem, actualAttribute.name));
+        String(expectedValue),
+        String(goog.testing.dom.getAttributeValue_(
+            actualElem, actualAttribute.name)));
   }
 
   if (strictAttributes) {

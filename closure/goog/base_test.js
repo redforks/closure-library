@@ -23,6 +23,7 @@ goog.provide('goog.baseTest');
 
 goog.setTestOnly('goog.baseTest');
 
+goog.require('goog.Promise');
 // Used to test dynamic loading works, see testRequire*
 goog.require('goog.Timer');
 goog.require('goog.dom.TagName');
@@ -1006,13 +1007,6 @@ function testGetMsgWithPlaceholders() {
 
 //=== miscellaneous tests ===
 
-function testIdentity() {
-  assertEquals(3, goog.identityFunction(3));
-  assertEquals(3, goog.identityFunction(3, 4));
-  assertEquals(null, goog.identityFunction(null));
-  assertTrue(goog.identityFunction() === undefined);
-}
-
 function testGetObjectByName() {
   var m = {
     'undefined': undefined,
@@ -1322,6 +1316,32 @@ function testGoogRequireCheck() {
   delete far;
 }
 
+function diables_testCspSafeGoogRequire() {
+  if (goog.userAgent.IE && !goog.userAgent.isVersionOrHigher('10')) {
+    return;
+  }
+
+  stubs.set(goog, 'ENABLE_CHROME_APP_SAFE_SCRIPT_LOADING', true);
+
+  // Aliased so that build tools do not mistake this for an actual call.
+  var require = goog.require;
+
+  require('goog.Uri');
+
+  // Set a timeout to allow the user agent to finish parsing this script block,
+  // thus allowing the appended script (via goog.require) to execute.
+  var ASYNC_TIMEOUT_MS = 1000;
+
+  var resolver = goog.Promise.withResolver();
+  window.setTimeout(function() {
+    assertNotUndefined(goog.Uri);
+    resolver.resolve();
+    stubs.reset();
+  }, ASYNC_TIMEOUT_MS);
+
+  return resolver.promise;
+}
+
 function testLateRequireProtection() {
   if (!document.readyState) return;
   var e = assertThrows(function() {
@@ -1427,6 +1447,22 @@ function testGoogModuleGet() {
   // Validate that the module exports object has not changed
   assertEquals(earlyTestModuleGet, testModuleExports);
 }
+
+
+function testLoadFileSync() {
+  var fileContents = goog.loadFileSync_('deps.js');
+  assertTrue('goog.loadFileSync_ returns string',
+      typeof fileContents === 'string');
+  assertTrue('goog.loadFileSync_ string length > 0', fileContents.length > 0);
+
+  stubs.set(goog.global, 'CLOSURE_LOAD_FILE_SYNC', function(src) {
+    return 'closure load file sync: ' + src;
+  });
+
+  assertEquals('goog.CLOSURE_LOAD_FILE_SYNC override',
+      goog.loadFileSync_('test url'), 'closure load file sync: test url');
+}
+
 
 function testNormalizePath() {
   assertEquals('foo/path.js', goog.normalizePath_('./foo/./path.js'));
