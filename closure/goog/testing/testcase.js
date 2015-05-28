@@ -29,8 +29,10 @@ goog.provide('goog.testing.TestCase.Order');
 goog.provide('goog.testing.TestCase.Result');
 goog.provide('goog.testing.TestCase.Test');
 
+
 goog.require('goog.Promise');
 goog.require('goog.Thenable');
+goog.require('goog.asserts');
 goog.require('goog.dom.TagName');
 goog.require('goog.object');
 goog.require('goog.testing.asserts');
@@ -815,13 +817,22 @@ goog.testing.TestCase.prototype.finishTestInvocation_ = function(opt_error) {
   if (this.depth_ > goog.testing.TestCase.MAX_STACK_DEPTH_ ||
       this.now() - this.batchTime_ > goog.testing.TestCase.maxRunTime) {
     this.saveMessage('Breaking async');
-    this.batchTime_ = this.now();
-    this.depth_ = 0;
-    this.timeout(goog.bind(this.runNextTest_, this), 0);
+    this.timeout(goog.bind(this.startNextBatch_, this), 0);
   } else {
     ++this.depth_;
     this.runNextTest_();
   }
+};
+
+
+/**
+ * Start a new batch to tests after yielding, resetting batchTime and depth.
+ * @private
+ */
+goog.testing.TestCase.prototype.startNextBatch_ = function() {
+  this.batchTime_ = this.now();
+  this.depth_ = 0;
+  this.runNextTest_();
 };
 
 
@@ -995,6 +1006,31 @@ goog.testing.TestCase.prototype.autoDiscoverLifecycle = function(opt_obj) {
   if (obj['shouldRunTests']) {
     this.shouldRunTests = goog.bind(obj['shouldRunTests'], obj);
   }
+};
+
+
+// TODO(johnlenz): make this package private
+/**
+ * @param {!Object} obj  An object from which to extract test and lifecycle
+ * methods.
+ */
+goog.testing.TestCase.prototype.setTestObj = function(obj) {
+  // Drop any previously added (likely auto-discovered) tests, only one source
+  // of discovered test and life-cycle methods is allowed.
+  goog.asserts.assert(this.tests_.length == 0,
+      'Test methods have already been configured.');
+
+  var regex = new RegExp('^' + this.getAutoDiscoveryPrefix());
+  for (var name in obj) {
+    if (regex.test(name)) {
+      var testMethod = obj[name];
+      if (goog.isFunction(testMethod)) {
+        this.addNewTest(name, testMethod, obj);
+      }
+    }
+  }
+
+  this.autoDiscoverLifecycle(obj);
 };
 
 

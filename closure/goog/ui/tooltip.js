@@ -26,6 +26,7 @@ goog.provide('goog.ui.Tooltip.State');
 
 goog.require('goog.Timer');
 goog.require('goog.array');
+goog.require('goog.asserts');
 goog.require('goog.dom');
 goog.require('goog.dom.TagName');
 goog.require('goog.dom.safe');
@@ -415,19 +416,23 @@ goog.ui.Tooltip.prototype.setElement = function(el) {
   if (el) {
     var body = this.dom_.getDocument().body;
     body.insertBefore(el, body.lastChild);
+    this.registerContentFocusEvents_();
+  } else {
+    goog.dispose(this.tooltipFocusHandler_);
+    this.tooltipFocusHandler_ = null;
   }
-  this.registerContentFocusEvents_();
 };
 
 
 /**
  * Handler for keyboard focus events of elements inside the tooltip's content
- * element.
+ * element. This should only be invoked if this.getElement() != null.
  * @private
  */
 goog.ui.Tooltip.prototype.registerContentFocusEvents_ = function() {
   goog.dispose(this.tooltipFocusHandler_);
-  this.tooltipFocusHandler_ = new goog.events.FocusHandler(this.getElement());
+  this.tooltipFocusHandler_ = new goog.events.FocusHandler(goog.asserts.assert(
+      this.getElement()));
   this.registerDisposable(this.tooltipFocusHandler_);
 
   goog.events.listen(this.tooltipFocusHandler_,
@@ -671,8 +676,8 @@ goog.ui.Tooltip.prototype.maybeHide = function(el) {
     var dom = this.getDomHelper();
     var focusedEl = dom.getActiveElement();
     // If the tooltip content is focused, then don't hide the tooltip.
-    var tooltipContentFocused =
-        focusedEl && dom.contains(this.getElement(), focusedEl);
+    var tooltipContentFocused = focusedEl && this.getElement() &&
+        dom.contains(this.getElement(), focusedEl);
     if ((this.activeEl_ == null || (this.activeEl_ != this.getElement() &&
         !this.elements_.contains(this.activeEl_))) &&
         !tooltipContentFocused && !this.hasActiveChild()) {

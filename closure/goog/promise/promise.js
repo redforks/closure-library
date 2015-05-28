@@ -329,10 +329,17 @@ goog.Promise.RESOLVE_FAST_PATH_ = function() {};
 /**
  * @param {(TYPE|goog.Thenable<TYPE>|Thenable)=} opt_value
  * @return {!goog.Promise<TYPE>} A new Promise that is immediately resolved
- *     with the given value.
+ *     with the given value. If the input value is already a goog.Promise, it
+ *     will be returned immediately without creating a new instance.
  * @template TYPE
  */
 goog.Promise.resolve = function(opt_value) {
+  if (opt_value instanceof goog.Promise) {
+    // Avoid creating a new object if we already have a promise object
+    // of the correct type.
+    return opt_value;
+  }
+
   // Passes the value as the context, which is a special fast pass when
   // goog.Promise.RESOLVE_FAST_PATH_ is passed as the first argument.
   return new goog.Promise(goog.Promise.RESOLVE_FAST_PATH_, opt_value);
@@ -554,8 +561,7 @@ goog.Thenable.addImplementation(goog.Promise);
  * If the Promise is rejected, the {@code onRejected} callback will be invoked
  * with the rejection reason as argument.
  *
- * @param {?(function(this:THIS, TYPE):
- *             (RESULT|IThenable<RESULT>|Thenable))=} opt_onFulfilled A
+ * @param {?(function(this:THIS, TYPE):?)=} opt_onFulfilled A
  *     function that will be invoked with the fulfillment value if the Promise
  *     is fulfilled.
  * @param {?(function(this:THIS, *): *)=} opt_onRejected A function that will
@@ -564,7 +570,7 @@ goog.Thenable.addImplementation(goog.Promise);
  *     execution context for the callbacks. By default, functions are executed
  *     with the default this.
  * @package
- * @template RESULT,THIS
+ * @template THIS
  */
 goog.Promise.prototype.thenVoid = function(
     opt_onFulfilled, opt_onRejected, opt_context) {
