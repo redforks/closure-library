@@ -46,9 +46,19 @@ goog.async.run = function(callback, opt_context) {
  * @private
  */
 goog.async.run.initializeRunner_ = function() {
-  goog.async.run.schedule_ = function() {
-    goog.async.nextTick(goog.async.run.processWorkQueue);
-  };
+  // If native Promises are available in the browser, just schedule the callback
+  // on a fulfilled promise, which is specified to be async, but as fast as
+  // possible.
+  if (goog.global.Promise && goog.global.Promise.resolve) {
+    var promise = goog.global.Promise.resolve(undefined);
+    goog.async.run.schedule_ = function() {
+      promise.then(goog.async.run.processWorkQueue);
+    };
+  } else {
+    goog.async.run.schedule_ = function() {
+      goog.async.nextTick(goog.async.run.processWorkQueue);
+    };
+  }
 };
 
 
