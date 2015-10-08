@@ -68,21 +68,34 @@ goog.dom.xml.hasActiveXObjectSupport_ = function() {
  * Possible override if this test become wrong in coming IE versions.
  * @type {boolean}
  */
-goog.dom.xml.ACTIVEX_SUPPORT = goog.userAgent.IE &&
-                               goog.dom.xml.hasActiveXObjectSupport_();
+goog.dom.xml.ACTIVEX_SUPPORT =
+    goog.userAgent.IE && goog.dom.xml.hasActiveXObjectSupport_();
 
 
 /**
  * Creates an XML document appropriate for the current JS runtime
  * @param {string=} opt_rootTagName The root tag name.
  * @param {string=} opt_namespaceUri Namespace URI of the document element.
+ * @param {boolean=} opt_preferActiveX Whether to default to ActiveXObject to
+ * create Document in IE. Use this if you need xpath support in IE (e.g.,
+ * selectSingleNode or selectNodes), but be aware that the ActiveXObject does
+ * not support various DOM-specific Document methods and attributes.
  * @return {Document} The new document.
+ * @throws {Error} if browser does not support creating new documents or
+ * namespace is provided without a root tag name.
  */
-goog.dom.xml.createDocument = function(opt_rootTagName, opt_namespaceUri) {
+goog.dom.xml.createDocument = function(opt_rootTagName, opt_namespaceUri,
+                                       opt_preferActiveX) {
   if (opt_namespaceUri && !opt_rootTagName) {
     throw Error("Can't create document with namespace and no root tag");
   }
-  if (goog.dom.xml.ACTIVEX_SUPPORT) {
+  // If document.implementation.createDocument is available and they haven't
+  // explicitly opted to use ActiveXObject when possible.
+  if (document.implementation && document.implementation.createDocument &&
+      !(goog.dom.xml.ACTIVEX_SUPPORT && opt_preferActiveX)) {
+    return document.implementation.createDocument(opt_namespaceUri || '',
+                                                  opt_rootTagName || '', null);
+  } else if (goog.dom.xml.ACTIVEX_SUPPORT) {
     var doc = goog.dom.xml.createMsXmlDocument_();
     if (doc) {
       if (opt_rootTagName) {
@@ -92,11 +105,6 @@ goog.dom.xml.createDocument = function(opt_rootTagName, opt_namespaceUri) {
       }
       return doc;
     }
-  } else if (document.implementation &&
-             document.implementation.createDocument) {
-    return document.implementation.createDocument(opt_namespaceUri || '',
-                                                  opt_rootTagName || '',
-                                                  null);
   }
   throw Error('Your browser does not support creating new documents');
 };
@@ -105,15 +113,21 @@ goog.dom.xml.createDocument = function(opt_rootTagName, opt_namespaceUri) {
 /**
  * Creates an XML document from a string
  * @param {string} xml The text.
+ * @param {boolean=} opt_preferActiveX Whether to default to ActiveXObject to
+ * create Document in IE. Use this if you need xpath support in IE (e.g.,
+ * selectSingleNode or selectNodes), but be aware that the ActiveXObject does
+ * not support various DOM-specific Document methods and attributes.
  * @return {Document} XML document from the text.
+ * @throws {Error} if browser does not support loading XML documents.
  */
-goog.dom.xml.loadXml = function(xml) {
-  if (goog.dom.xml.ACTIVEX_SUPPORT) {
+goog.dom.xml.loadXml = function(xml, opt_preferActiveX) {
+  if (typeof DOMParser != 'undefined' &&
+      !(goog.dom.xml.ACTIVEX_SUPPORT && opt_preferActiveX)) {
+    return new DOMParser().parseFromString(xml, 'application/xml');
+  } else if (goog.dom.xml.ACTIVEX_SUPPORT) {
     var doc = goog.dom.xml.createMsXmlDocument_();
     doc.loadXML(xml);
     return doc;
-  } else if (typeof DOMParser != 'undefined') {
-    return new DOMParser().parseFromString(xml, 'application/xml');
   }
   throw Error('Your browser does not support loading xml documents');
 };
@@ -123,9 +137,10 @@ goog.dom.xml.loadXml = function(xml) {
  * Serializes an XML document or subtree to string.
  * @param {Document|Element} xml The document or the root node of the subtree.
  * @return {string} The serialized XML.
+ * @throws {Error} if browser does not support XML serialization.
  */
 goog.dom.xml.serialize = function(xml) {
-  // Compatible with Internet Explorer.
+  // Compatible with IE/ActiveXObject.
   var text = xml.xml;
   if (text) {
     return text;
@@ -158,6 +173,9 @@ goog.dom.xml.selectSingleNode = function(node, path) {
         XPathResult.FIRST_ORDERED_NODE_TYPE, null);
     return result.singleNodeValue;
   }
+  // This browser does not support xpath for the given node. If IE, ensure XML
+  // Document was created using ActiveXObject
+  // TODO(joeltine): This should throw instead of return null.
   return null;
 };
 
@@ -188,6 +206,9 @@ goog.dom.xml.selectNodes = function(node, path) {
     }
     return results;
   } else {
+    // This browser does not support xpath for the given node. If IE, ensure XML
+    // Document was created using ActiveXObject.
+    // TODO(joeltine): This should throw instead of return empty array.
     return [];
   }
 };
