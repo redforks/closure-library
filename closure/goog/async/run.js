@@ -118,11 +118,13 @@ if (goog.DEBUG) {
  */
 goog.async.run.processWorkQueue = function() {
   // NOTE: additional work queue items may be added while processing.
-  var item = null;
-  while (item = goog.async.run.workQueue_.remove()) {
-    item.fn.call(item.scope);
-    goog.async.run.workQueue_.returnUnused(item);
-  }
+  ReactDOM.unstable_batchedUpdates(function() {
+    var item = null;
+    while (item = goog.async.run.workQueue_.remove()) {
+      item.fn.call(item.scope);
+      goog.async.run.workQueue_.returnUnused(item);
+    }
+  });
 
   // There are no more work items, allow processing to be scheduled again.
   goog.async.run.workQueueScheduled_ = false;
