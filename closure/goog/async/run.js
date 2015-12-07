@@ -17,6 +17,7 @@ goog.provide('goog.async.run');
 goog.require('goog.async.WorkQueue');
 goog.require('goog.async.nextTick');
 goog.require('goog.async.throwException');
+goog.require('goog.debug.entryPointRegistry');
 
 
 /**
@@ -129,3 +130,16 @@ goog.async.run.processWorkQueue = function() {
   // There are no more work items, allow processing to be scheduled again.
   goog.async.run.workQueueScheduled_ = false;
 };
+
+
+// Register the browser event handler as an entry point, so that
+// it can be monitored for exception handling, etc.
+goog.debug.entryPointRegistry.register(
+    /**
+     * @param {function(!Function): !Function} transformer The transforming
+     *     function.
+     */
+    function(transformer) {
+      goog.async.run.processWorkQueue = transformer(
+          goog.async.run.processWorkQueue);
+    });
