@@ -74,10 +74,10 @@ function tearDown() {
   expectedFailures.handleTearDown();
   var testVisibleDiv2 = goog.dom.getElement('test-visible2');
   testVisibleDiv2.setAttribute('style', '');
-  testVisibleDiv2.innerHTML = '';
+  goog.dom.removeChildren(testVisibleDiv2);
   var testViewport = goog.dom.getElement('test-viewport');
   testViewport.setAttribute('style', '');
-  testViewport.innerHTML = '';
+  goog.dom.removeChildren(testViewport);
   goog.dispose(mockUserAgent);
 
   // Prevent multiple vendor prefixed mock elements from poisoning the cache.
@@ -2159,22 +2159,26 @@ function testGetViewportPageOffset() {
       'Test has been flaky for ie9-win7 and ie8-winxp image. Disabling. ' +
       'See b/22873770.');
 
-  var testViewport = goog.dom.getElement('test-viewport');
-  testViewport.style.height = '5000px';
-  testViewport.style.width = '5000px';
-  var offset = goog.style.getViewportPageOffset(document);
-  assertEquals(0, offset.x);
-  assertEquals(0, offset.y);
+  try {
+    var testViewport = goog.dom.getElement('test-viewport');
+    testViewport.style.height = '5000px';
+    testViewport.style.width = '5000px';
+    var offset = goog.style.getViewportPageOffset(document);
+    assertEquals(0, offset.x);
+    assertEquals(0, offset.y);
 
-  window.scrollTo(0, 100);
-  offset = goog.style.getViewportPageOffset(document);
-  assertEquals(0, offset.x);
-  assertEquals(100, offset.y);
+    window.scrollTo(0, 100);
+    offset = goog.style.getViewportPageOffset(document);
+    assertEquals(0, offset.x);
+    assertEquals(100, offset.y);
 
-  window.scrollTo(100, 0);
-  offset = goog.style.getViewportPageOffset(document);
-  assertEquals(100, offset.x);
-  assertEquals(0, offset.y);
+    window.scrollTo(100, 0);
+    offset = goog.style.getViewportPageOffset(document);
+    assertEquals(100, offset.x);
+    assertEquals(0, offset.y);
+  } catch (e) {
+    expectedFailures.handleException(e);
+  }
 }
 
 function testGetsTranslation() {

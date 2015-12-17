@@ -16,6 +16,7 @@ goog.provide('goog.string.linkifyTest');
 goog.setTestOnly('goog.string.linkifyTest');
 
 goog.require('goog.dom.TagName');
+goog.require('goog.html.SafeHtml');
 goog.require('goog.string');
 goog.require('goog.string.linkify');
 goog.require('goog.testing.dom');
@@ -23,10 +24,15 @@ goog.require('goog.testing.jsunit');
 
 var div = document.createElement(goog.dom.TagName.DIV);
 
-function assertLinkify(comment, input, expected) {
+function assertLinkify(comment, input, expected, opt_preserveNewlines) {
   assertEquals(
       comment, expected,
-      goog.string.linkify.linkifyPlainText(input, {rel: '', target: ''}));
+      goog.string.linkify.linkifyPlainText(
+          input, {rel: '', target: ''}, opt_preserveNewlines));
+  assertEquals(
+      comment, expected,
+      goog.html.SafeHtml.unwrap(goog.string.linkify.linkifyPlainTextAsHtml(
+          input, {rel: '', target: ''}, opt_preserveNewlines)));
 }
 
 function testContainsNoLink() {
@@ -527,4 +533,18 @@ function testIpv6Url() {
       'http://[::FFFF:129.144.52.38]:80/index.html',
       '<a href="http://[::FFFF:129.144.52.38]:80/index.html">' +
       'http://[::FFFF:129.144.52.38]:80/index.html<\/a>');
+}
+
+function testPreserveNewlines() {
+  assertLinkify(
+      'Preserving newlines',
+      'Example:\nhttp://www.google.com/',
+      'Example:<br>' +
+          '<a href="http://www.google.com/">http://www.google.com/<\/a>',
+      /* preserveNewlines */ true);
+  assertLinkify(
+      'Preserving newlines with no links',
+      'Line 1\nLine 2',
+      'Line 1<br>Line 2',
+      /* preserveNewlines */ true);
 }
