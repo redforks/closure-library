@@ -70,12 +70,14 @@ function stubXhrToReturn(status, opt_responseText, opt_latency) {
       this.load(0);
     },
     send: function(data) {
+      this.data = data;
+      this.sent = true;
+
+      // Fulfill the send asynchronously, or possibly with the MockClock.
+      window.setTimeout(goog.bind(this.load, this, status), opt_latency || 0);
       if (mockClock) {
         mockClock.tick(opt_latency);
       }
-      this.data = data;
-      this.sent = true;
-      this.load(status);
     },
     load: function(status) {
       this.status = status;
@@ -245,8 +247,8 @@ function testGetBytes() {
 function testSerialRequests() {
   if (isRunningLocally()) return;
 
-  return xhr.get('testdata/xhr_test_text.data').
-      then(function(response) {
+  return xhr.get('testdata/xhr_test_text.data')
+      .then(function(response) {
         return xhr.getJson(
             'testdata/xhr_test_json.data', {xssiPrefix: 'while(1);\n'});
       }).then(function(responseObj) {
@@ -287,16 +289,6 @@ function testBadOriginTriggersOnErrorHandler() {
 // The following tests use a stubbed out XMLHttpRequest.
 //============================================================================
 
-function testAbortRequest() {
-  stubXhrToReturn(200);
-  var promise = xhr.send('GET', 'test-url', null).thenCatch(
-      function(error) {
-        assertTrue(error instanceof goog.Promise.CancellationError);
-      });
-  promise.cancel();
-  return promise;
-}
-
 function testSendNoOptions() {
   var called = false;
   stubXhrToReturn(200);
@@ -334,8 +326,8 @@ function testSendPostDoesntSetHeaderWithFormData() {
 function testSendPostHeaders() {
   stubXhrToReturn(200);
   return xhr.send('POST', 'test-url', null,
-      { headers: {'Content-Type': 'text/plain', 'X-Made-Up': 'FooBar'} }).
-      then(function(stubXhr) {
+      { headers: {'Content-Type': 'text/plain', 'X-Made-Up': 'FooBar'} })
+      .then(function(stubXhr) {
         assertEquals('POST', stubXhr.method);
         assertEquals('test-url', stubXhr.url);
         assertEquals('text/plain', stubXhr.headers['Content-Type']);
@@ -350,8 +342,8 @@ function testSendPostHeadersWithFormData() {
 
   stubXhrToReturn(200);
   return xhr.send('POST', 'test-url', formData,
-      { headers: {'Content-Type': 'text/plain', 'X-Made-Up': 'FooBar'} }).
-      then(function(stubXhr) {
+      { headers: {'Content-Type': 'text/plain', 'X-Made-Up': 'FooBar'} })
+      .then(function(stubXhr) {
         assertEquals('POST', stubXhr.method);
         assertEquals('test-url', stubXhr.url);
         assertEquals('text/plain', stubXhr.headers['Content-Type']);
@@ -399,8 +391,8 @@ function testSendNullPostHeadersWithFormData() {
 
 function testSendWithCredentials() {
   stubXhrToReturn(200);
-  return xhr.send('POST', 'test-url', null, {withCredentials: true}).
-      then(function(stubXhr) {
+  return xhr.send('POST', 'test-url', null, {withCredentials: true})
+      .then(function(stubXhr) {
         assertTrue('XHR should have been sent', stubXhr.sent);
         assertTrue(stubXhr.withCredentials);
       });
@@ -408,8 +400,8 @@ function testSendWithCredentials() {
 
 function testSendWithMimeType() {
   stubXhrToReturn(200);
-  return xhr.send('POST', 'test-url', null, {mimeType: 'text/plain'}).
-      then(function(stubXhr) {
+  return xhr.send('POST', 'test-url', null, {mimeType: 'text/plain'})
+      .then(function(stubXhr) {
         assertTrue('XHR should have been sent', stubXhr.sent);
         assertEquals('text/plain', stubXhr.mimeType);
       });
@@ -428,8 +420,8 @@ function testSendWithHttpError() {
 
 function testSendWithTimeoutNotHit() {
   stubXhrToReturn(200, null /* opt_responseText */, 1400 /* opt_latency */);
-  return xhr.send('POST', 'test-url', null, {timeoutMs: 1500}).
-      then(function(stubXhr) {
+  return xhr.send('POST', 'test-url', null, {timeoutMs: 1500})
+      .then(function(stubXhr) {
         assertTrue(mockClock.getTimeoutsMade() > 0);
         assertTrue('XHR should have been sent', stubXhr.sent);
         assertFalse('XHR should not have been aborted', stubXhr.aborted);
@@ -448,17 +440,12 @@ function testSendWithTimeoutHit() {
 }
 
 function testCancelRequest() {
-  stubXhrToReturn(200, null /* opt_responseText */, 25);
-  var promise = xhr.send('GET', 'test-url', null, {timeoutMs: 50});
-  promise.then(
+  stubXhrToReturn(200);
+  var promise = xhr.send('GET', 'test-url').then(
       fail /* opt_onResolved */,
       function(error) {
-        assertTrue('XHR should have been sent', error.xhr.sent);
-        if (error instanceof goog.Promise.CancellationError) {
-          error.xhr.abort();
-        }
-        assertTrue('XHR should have been aborted', error.xhr.aborted);
         assertTrue(error instanceof goog.Promise.CancellationError);
+        return null;  // Return a non-error value for the test runner.
       });
   promise.cancel();
   return promise;
