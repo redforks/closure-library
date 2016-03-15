@@ -690,6 +690,23 @@ goog.array.remove = function(arr, obj) {
 
 
 /**
+ * Removes the last occurrence of a particular value from an array.
+ * @param {!IArrayLike<T>} arr Array from which to remove value.
+ * @param {T} obj Object to remove.
+ * @return {boolean} True if an element was removed.
+ * @template T
+ */
+goog.array.removeLast = function(arr, obj) {
+  var i = goog.array.lastIndexOf(arr, obj);
+  if (i >= 0) {
+    goog.array.removeAt(arr, i);
+    return true;
+  }
+  return false;
+};
+
+
+/**
  * Removes from an array the element at index i
  * @param {IArrayLike<?>} arr Array or array like object from which to
  *     remove value.
@@ -1132,16 +1149,17 @@ goog.array.sort = function(arr, opt_compareFn) {
  * @template T
  */
 goog.array.stableSort = function(arr, opt_compareFn) {
+  var compArr = new Array(arr.length);
   for (var i = 0; i < arr.length; i++) {
-    arr[i] = {index: i, value: arr[i]};
+    compArr[i] = {index: i, value: arr[i]};
   }
   var valueCompareFn = opt_compareFn || goog.array.defaultCompare;
   function stableCompareFn(obj1, obj2) {
     return valueCompareFn(obj1.value, obj2.value) || obj1.index - obj2.index;
   }
-  goog.array.sort(arr, stableCompareFn);
+  goog.array.sort(compArr, stableCompareFn);
   for (var i = 0; i < arr.length; i++) {
-    arr[i] = arr[i].value;
+    arr[i] = compArr[i].value;
   }
 };
 
