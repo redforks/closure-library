@@ -116,7 +116,7 @@ function testBasicStubbing() {
   assertUndefined(mockObj.method1(4));
 
   goog.labs.mock.when(mockObj).method2(1, 'hi').then(function(i) {
-    return 'oh'
+    return 'oh';
   });
   assertEquals('hi', obj.method2(1, 'hi'));
   assertEquals('oh', mockObj.method2(1, 'hi'));
@@ -145,8 +145,7 @@ function testStubbingConsecutiveCalls() {
   var obj = {method: function(i) { return i * 42; }};
 
   var mockObj = goog.labs.mock.mock(obj);
-  goog.labs.mock.when(mockObj).method(1).thenReturn(3);
-  goog.labs.mock.when(mockObj).method(1).thenReturn(4);
+  goog.labs.mock.when(mockObj).method(1).thenReturn(3).thenReturn(4);
 
   assertEquals(42, obj.method(1));
   assertEquals(3, mockObj.method(1));
@@ -155,13 +154,56 @@ function testStubbingConsecutiveCalls() {
 
   var x = function(i) { return i; };
   var mockedFunc = goog.labs.mock.mockFunction(x);
-  goog.labs.mock.when(mockedFunc)(100).thenReturn(10);
-  goog.labs.mock.when(mockedFunc)(100).thenReturn(25);
+  goog.labs.mock.when(mockedFunc)(100).thenReturn(10).thenReturn(25);
 
   assertEquals(100, x(100));
   assertEquals(10, mockedFunc(100));
   assertEquals(25, mockedFunc(100));
   assertEquals(25, mockedFunc(100));
+}
+
+function testStubbingMultipleObjectStubsNonConflictingArgsAllShouldWork() {
+  var obj = {method: function(i) { return i * 2; }};
+  var mockObj = goog.labs.mock.mock(obj);
+
+  goog.labs.mock.when(mockObj).method(2).thenReturn(100);
+  goog.labs.mock.when(mockObj).method(5).thenReturn(45);
+
+  assertEquals(100, mockObj.method(2));
+  assertEquals(45, mockObj.method(5));
+}
+
+function
+testStubbingMultipleObjectStubsConflictingArgsMostRecentShouldPrevail() {
+  var obj = {method: function(i) { return i * 2; }};
+  var mockObj = goog.labs.mock.mock(obj);
+
+  goog.labs.mock.when(mockObj).method(2).thenReturn(100);
+  goog.labs.mock.when(mockObj).method(2).thenReturn(45);
+
+  assertEquals(45, mockObj.method(2));
+}
+
+function testStubbingMultipleFunctionStubsNonConflictingArgsAllShouldWork() {
+  var x = function(i) { return i; };
+  var mockedFunc = goog.labs.mock.mockFunction(x);
+
+  goog.labs.mock.when(mockedFunc)(100).thenReturn(10);
+  goog.labs.mock.when(mockedFunc)(10).thenReturn(132);
+
+  assertEquals(10, mockedFunc(100));
+  assertEquals(132, mockedFunc(10));
+}
+
+function
+testStubbingMultipleFunctionStubsConflictingArgsMostRecentShouldPrevail() {
+  var x = function(i) { return i; };
+  var mockedFunc = goog.labs.mock.mockFunction(x);
+
+  goog.labs.mock.when(mockedFunc)(100).thenReturn(10);
+  goog.labs.mock.when(mockedFunc)(100).thenReturn(132);
+
+  assertEquals(132, mockedFunc(100));
 }
 
 function testSpying() {
@@ -232,7 +274,7 @@ function testVerifyForObjects() {
 
   assertEquals(5, mockObj.method1(2));
   goog.labs.mock.verify(mockObj).method1(2);
-  var e = assertThrows(goog.bind(goog.labs.mock.verify(mockObj).method1, 2));
+  var e = assertThrows(goog.partial(goog.labs.mock.verify(mockObj).method2, 2));
   assertTrue(e instanceof goog.labs.mock.VerificationError);
 }
 
@@ -245,7 +287,7 @@ function testVerifyForFunctions() {
   goog.labs.mock.verify(mockFunc)(2);
   goog.labs.mock.verify(mockFunc)(lessThan(3));
 
-  var e = assertThrows(goog.bind(goog.labs.mock.verify(mockFunc), 3));
+  var e = assertThrows(goog.partial(goog.labs.mock.verify(mockFunc), 3));
   assertTrue(e instanceof goog.labs.mock.VerificationError);
 }
 
@@ -363,8 +405,8 @@ function testMatcherVerify() {
   spy.method(6);
 
   goog.labs.mock.verify(spy).method(greaterThan(4));
-  var e =
-      assertThrows(goog.bind(goog.labs.mock.verify(spy).method, lessThan(4)));
+  var e = assertThrows(
+      goog.partial(goog.labs.mock.verify(spy).method, lessThan(4)));
   assertTrue(e instanceof goog.labs.mock.VerificationError);
 
   // Using mocks
@@ -374,7 +416,7 @@ function testMatcherVerify() {
 
   goog.labs.mock.verify(mockObj).method(greaterThan(7));
   var e = assertThrows(
-      goog.bind(goog.labs.mock.verify(mockObj).method, lessThan(7)));
+      goog.partial(goog.labs.mock.verify(mockObj).method, lessThan(7)));
   assertTrue(e instanceof goog.labs.mock.VerificationError);
 }
 
@@ -393,7 +435,7 @@ function testMatcherVerifyCollisionBetweenMatchers() {
   goog.labs.mock.when(mockObj).method(anything()).thenReturn(100);
 
   var e = assertThrows(
-      goog.bind(goog.labs.mock.verify(mockObj).method, anything()));
+      goog.partial(goog.labs.mock.verify(mockObj).method, anything()));
   assertTrue(e instanceof goog.labs.mock.VerificationError);
 }
 

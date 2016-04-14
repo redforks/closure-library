@@ -23,6 +23,7 @@
 
 goog.provide('goog.soy.data.SanitizedContent');
 goog.provide('goog.soy.data.SanitizedContentKind');
+goog.provide('goog.soy.data.SanitizedCss');
 goog.provide('goog.soy.data.UnsanitizedText');
 
 goog.require('goog.html.SafeHtml');
@@ -179,9 +180,8 @@ goog.soy.data.SanitizedContent.prototype.toSafeHtml = function() {
 };
 
 
-
 /**
- * An intermediary base class to allow the type system to sepcify text templates
+ * An intermediary base class to allow the type system to specify text templates
  * without referencing the soydata package.
  * @extends {goog.soy.data.SanitizedContent}
  * @constructor
@@ -191,3 +191,17 @@ goog.soy.data.UnsanitizedText = function() {
   goog.soy.data.UnsanitizedText.base(this, 'constructor');
 };
 goog.inherits(goog.soy.data.UnsanitizedText, goog.soy.data.SanitizedContent);
+
+
+
+/**
+ * An intermediary base class to allow the type system to specify CSS templates
+ * without referencing the soydata package.
+ * @extends {goog.soy.data.SanitizedContent}
+ * @constructor
+ */
+goog.soy.data.SanitizedCss = function() {
+  // TODO(gboyer): Delete this class after moving soydata to Closure.
+  goog.soy.data.SanitizedCss.base(this, 'constructor');
+};
+goog.inherits(goog.soy.data.SanitizedCss, goog.soy.data.SanitizedContent);
