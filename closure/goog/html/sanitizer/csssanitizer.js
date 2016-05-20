@@ -16,6 +16,7 @@
  * @fileoverview
  * JavaScript support for client-side CSS sanitization.
  *
+ * @author danesh@google.com (Danesh Irani)
  * @author mikesamuel@gmail.com (Mike Samuel)
  */
 
@@ -172,7 +173,7 @@ goog.html.sanitizer.CssSanitizer.sanitizeProperty_ = function(
     if (opt_uriRewriter) {
       // Preserve original case
       propertyValue = goog.string.trim(propValue);
-      // TODO(user): Check if we need to resolve this Uri.
+      // TODO(danesh): Check if we need to resolve this Uri.
       var uri = goog.string.stripQuotes(
           propertyValue.substring(4, propertyValue.length - 1), '"\'');
 
@@ -189,7 +190,7 @@ goog.html.sanitizer.CssSanitizer.sanitizeProperty_ = function(
           goog.string.endsWith(propertyValue, ')'))) {
       // Functions start at a token like "name(" and end with a ")" taking
       // into account nesting.
-      // TODO(user): Handle functions that may need recursing or that may
+      // TODO(danesh): Handle functions that may need recursing or that may
       // appear in the middle of a string. For now, just allow functions which
       // aren't nested.
       propertyValue = null;
@@ -271,7 +272,8 @@ goog.html.sanitizer.CssSanitizer.getCssValue_ = function(cssStyle, propName) {
   var getPropDescriptor = Object.getOwnPropertyDescriptor(
       CSSStyleDeclaration.prototype, 'getPropertyValue');
   if (getPropDescriptor && cssStyle.getPropertyValue) {
-    return getPropDescriptor.value.call(cssStyle, propName);
+    // getPropertyValue on Safari can return null
+    return getPropDescriptor.value.call(cssStyle, propName) || '';
   } else if (cssStyle.getAttribute) {
     // In IE8 and other older browers we make a direct call to getAttribute.
     return String(cssStyle.getAttribute(propName));

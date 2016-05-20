@@ -63,7 +63,7 @@ function assertCSSTextEquals(expectedCssText, actualCssText) {
   if (isIE8()) {
     // We get a bunch of default values set in IE8 because of the way we iterate
     // over the CSSStyleDecleration keys.
-    // TODO(user): Fix IE8 or remove this hack. It will be problematic for
+    // TODO(danesh): Fix IE8 or remove this hack. It will be problematic for
     // tests which have an extra semi-colon in the value (even if quoted).
     var actualCssArry = actualCssText.split(/\s*;\s*/);
     var ie8StyleString = 'WIDTH: 0px; BOTTOM: 0px; HEIGHT: 0px; TOP: 0px; ' +
@@ -96,7 +96,7 @@ function getSanitizedInlineStyle(sourceCss, opt_urlRewrite) {
     // IE8 doesn't like setting invalid properties. It throws an "Invalid
     // Argument" exception.
     if (!isIE8()) {
-      throw 'Rethrowing: ' + err;
+      throw err;
     }
     return '';
   }
@@ -141,7 +141,7 @@ function testValidCss() {
   actualCSS = 'quotes: "{" "}" "<" ">"';
   expectedCSS = 'quotes: "{" "}" "<" ">";';
   if (isSafari()) {
-    // TODO(user): Figure out what is wrong with WebKit (Safari).
+    // TODO(danesh): Figure out what is wrong with WebKit (Safari).
     expectedCSS = 'quotes: \'{\';';
   }
   assertCSSTextEquals(expectedCSS, getSanitizedInlineStyle(actualCSS));
@@ -212,6 +212,11 @@ function testCssBackground() {
   assertFalse(goog.string.contains(sanitizedCss, 'Bar.png'));
 }
 
+function testVendorPrefixed() {
+  var actualCSS = '-webkit-text-stroke: calc(3px - 2px) red';
+  var expectedCSS = '';
+  assertCSSTextEquals(expectedCSS, getSanitizedInlineStyle(actualCSS));
+}
 
 function testColor() {
   var colors = [
