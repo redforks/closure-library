@@ -111,6 +111,9 @@ function testHtmlSanitizeSafeHtml() {
 
   html = '<div><span>hello world</span></div>';
   assertSanitizedHtml(html, html);
+
+  html = '<div><a target=\'_blank\'>hello world</a></div>';
+  assertSanitizedHtml(html, html);
 }
 
 
@@ -160,6 +163,10 @@ function testHtmlSanitizeXSS() {
   // Browser Support [IE6.0|IE8.0|NS8.1-IE]
   safeHtml = '<img />';
   xssHtml = '<IMG SRC="javascript:xss=true;">';
+  assertSanitizedHtml(xssHtml, safeHtml);
+
+  safeHtml = '<div><a>hello world</a></div>';
+  xssHtml = '<div><a target=\'_xss\'>hello world</a></div>';
   assertSanitizedHtml(xssHtml, safeHtml);
 
   safeHtml = '';
@@ -788,6 +795,22 @@ function testDataAttributes() {
 }
 
 
+function testDisallowedDataWhitelistingAttributes() {
+  assertThrows(function() {
+    new goog.html.sanitizer.HtmlSanitizer.Builder()
+        .allowDataAttributes(['datai'])
+        .build();
+  });
+
+  // Disallow internal attribute used by html sanitizer
+  assertThrows(function() {
+    new goog.html.sanitizer.HtmlSanitizer.Builder()
+        .allowDataAttributes(['data-i', 'data-sanitizer-safe'])
+        .build();
+  });
+}
+
+
 function testFormBody() {
   var safeHtml = '<form>stuff</form>';
   var formHtml = '<form name="body">stuff</form>';
@@ -804,6 +827,29 @@ function testStyleTag() {
 }
 
 
+function testOnlyAllowTags() {
+  var result = '<div><div></div><a href="http://www.google.com">hi</a><br>' +
+      'Test.<div></div><div align="right">Test</div></div>';
+  // If we were mimicing goog.labs.html.sanitizer, our output would be
+  // '<div><a>hi</a><br>Test.<div>Test</div></div>';
+  assertSanitizedHtml(
+      '<div><img id="bar" name=foo class="c d" ' +
+          'src="http://wherever.com">' +
+          '<a href=" http://www.google.com">hi</a>' +
+          '<br>Test.<hr><div align="right">Test</div></div>',
+      result, new goog.html.sanitizer.HtmlSanitizer.Builder()
+                  .onlyAllowTags(['bR', 'a', 'DIV'])
+                  .build());
+}
+
+
+function testDisallowNonWhitelistedTags() {
+  assertThrows('Should error on elements not whitelisted', function() {
+    new goog.html.sanitizer.HtmlSanitizer.Builder().onlyAllowTags(['x'])
+  });
+}
+
+
 function testDefaultPoliciesAreApplied() {
   var result = '<img /><a href="http://www.google.com">hi</a>' +
       '<a href="ftp://whatever.com">another</a>';
@@ -814,6 +860,7 @@ function testDefaultPoliciesAreApplied() {
           '<a href=ftp://whatever.com>another</a>',
       result);
 }
+
 
 function testCustomNamePolicyIsApplied() {
   var result = '<img name="myOwnPrefix-foo" />' +
