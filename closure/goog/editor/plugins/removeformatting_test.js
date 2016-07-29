@@ -988,9 +988,8 @@ function testKeyboardShortcut_space() {
 
   FIELDMOCK.$replay();
 
-  var keyCode = goog.events.KeyCodes.SPACE;
-  var e = {keyCode: keyCode};
-  var key = String.fromCharCode(keyCode).toLowerCase();
+  var e = {};
+  var key = ' ';
   var result = FORMATTER.handleKeyboardShortcut(e, key, true);
   assertTrue(result);
 
@@ -1001,9 +1000,8 @@ function testKeyboardShortcut_other() {
   FIELDMOCK.$reset();
   FIELDMOCK.$replay();
 
-  var keyCode = goog.events.KeyCodes.BACKSLASH;
-  var e = {keyCode: keyCode};
-  var key = String.fromCharCode(keyCode).toLowerCase();
+  var e = {};
+  var key = 'x';
   var result = FORMATTER.handleKeyboardShortcut(e, key, true);
   assertFalse(result);
 
@@ -1018,24 +1016,22 @@ function testCustomKeyboardShortcut_custom() {
 
   FIELDMOCK.$replay();
 
-  var keyCode = goog.events.KeyCodes.BACKSLASH;
-  FORMATTER.setKeyboardShortcutKeyCode(keyCode);
-  var e = {keyCode: keyCode};
-  var key = String.fromCharCode(keyCode).toLowerCase();
+  var e = {};
+  var key = '\\';
+  FORMATTER.setKeyboardShortcutKey(key);
   var result = FORMATTER.handleKeyboardShortcut(e, key, true);
   assertTrue(result);
 
   FIELDMOCK.$verify();
 }
 
-function testCustomKeyboardShortcut_space() {
+function testCustomKeyboardShortcut_default() {
   FIELDMOCK.$reset();
   FIELDMOCK.$replay();
 
-  FORMATTER.setKeyboardShortcutKeyCode(goog.events.KeyCodes.BACKSLASH);
-  var keyCode = goog.events.KeyCodes.SPACE;
-  var e = {keyCode: keyCode};
-  var key = String.fromCharCode(keyCode).toLowerCase();
+  var e = {};
+  var key = ' ';
+  FORMATTER.setKeyboardShortcutKey('\\');
   var result = FORMATTER.handleKeyboardShortcut(e, key, true);
   assertFalse(result);
 
