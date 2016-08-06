@@ -247,10 +247,12 @@ goog.events.KeyCodes.isTextModifyingKeyEvent = function(e) {
  * @param {boolean=} opt_shiftKey Whether the shift key is held down.
  * @param {boolean=} opt_ctrlKey Whether the control key is held down.
  * @param {boolean=} opt_altKey Whether the alt key is held down.
+ * @param {boolean=} opt_metaKey Whether the meta key is held down.
  * @return {boolean} Whether it's a key that fires a keypress event.
  */
 goog.events.KeyCodes.firesKeyPressEvent = function(
-    keyCode, opt_heldKeyCode, opt_shiftKey, opt_ctrlKey, opt_altKey) {
+    keyCode, opt_heldKeyCode, opt_shiftKey, opt_ctrlKey, opt_altKey,
+    opt_metaKey) {
   if (!goog.userAgent.IE && !goog.userAgent.EDGE &&
       !(goog.userAgent.WEBKIT && goog.userAgent.isVersionOrHigher('525'))) {
     return true;
@@ -273,9 +275,12 @@ goog.events.KeyCodes.firesKeyPressEvent = function(
   }
   var heldKeyIsModifier = opt_heldKeyCode == goog.events.KeyCodes.CTRL ||
       opt_heldKeyCode == goog.events.KeyCodes.ALT ||
-      opt_heldKeyCode == goog.events.KeyCodes.SHIFT ||
       goog.userAgent.MAC && opt_heldKeyCode == goog.events.KeyCodes.META;
-  if ((!opt_shiftKey || goog.userAgent.MAC) && heldKeyIsModifier) {
+  // The Shift key blocks keypresses on Mac iff accompanied by another modifier.
+  var modifiedShiftKey = opt_heldKeyCode == goog.events.KeyCodes.SHIFT &&
+      (opt_ctrlKey || opt_metaKey);
+  if ((!opt_shiftKey || goog.userAgent.MAC) && heldKeyIsModifier ||
+      goog.userAgent.MAC && modifiedShiftKey) {
     return false;
   }
 

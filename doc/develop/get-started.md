@@ -1,10 +1,10 @@
-<!-- Documentation licensed under CC BY 4.0 -->
-<!-- License available at https://creativecommons.org/licenses/by/4.0/ -->
-
 ---
 section: develop
 ---
 
+
+<!-- Documentation licensed under CC BY 4.0 -->
+<!-- License available at https://creativecommons.org/licenses/by/4.0/ -->
 
 # Get Started with the Closure Library
 
@@ -42,7 +42,7 @@ goog.require('goog.dom');
  * @export
  */
 function sayHi() {
-  var newHeader = goog.dom.createDom('h1', {'style': 'background-color:#EEE'},
+  var newHeader = goog.dom.createDom(goog.dom.TagName.H1, {'style': 'background-color:#EEE'},
     'Hello world!');
   goog.dom.appendChild(document.body, newHeader);
 }
