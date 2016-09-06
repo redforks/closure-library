@@ -119,13 +119,18 @@ if (goog.DEBUG) {
  */
 goog.async.run.processWorkQueue = function() {
   // NOTE: additional work queue items may be added while processing.
-  ReactDOM.unstable_batchedUpdates(function() {
-    var item = null;
-    while (item = goog.async.run.workQueue_.remove()) {
-      item.fn.call(item.scope);
-      goog.async.run.workQueue_.returnUnused(item);
-    }
-  });
+  var item;
+  while (item = goog.async.run.workQueue_.remove()) {
+    // During ReactDOM commit changes to UI, new async work items may push to
+    // work queue, outer while loop ensure these work items got execute.
+    ReactDOM.unstable_batchedUpdates(function() {
+      while (item) {
+        item.fn.call(item.scope);
+        goog.async.run.workQueue_.returnUnused(item);
+        item = goog.async.run.workQueue_.remove();
+      }
+    });
+  }
 
   // There are no more work items, allow processing to be scheduled again.
   goog.async.run.workQueueScheduled_ = false;
