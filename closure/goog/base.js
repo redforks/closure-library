@@ -399,14 +399,14 @@ goog.module.get = function(name) {
  */
 goog.module.getInternal_ = function(name) {
   if (!COMPILED) {
-    if (goog.isProvided_(name)) {
-      // goog.require only return a value with-in goog.module files.
-      return name in goog.loadedModules_ ? goog.loadedModules_[name] :
-                                           goog.getObjectByName(name);
-    } else {
-      return null;
+    if (name in goog.loadedModules_) {
+      return goog.loadedModules_[name];
+    } else if (!goog.implicitNamespaces_[name]) {
+      var ns = goog.getObjectByName(name);
+      return ns != null ? ns : null;
     }
   }
+  return null;
 };
 
 
@@ -479,6 +479,9 @@ goog.setTestOnly = function(opt_message) {
  * into the JavaScript binary. If it is required elsewhere, it will be type
  * checked as normal.
  *
+ * Before using goog.forwardDeclare, please read the documentation at
+ * https://github.com/google/closure-compiler/wiki/Bad-Type-Annotation to
+ * understand the options and tradeoffs when working with forward declarations.
  *
  * @param {string} name The namespace to forward declare in the form of
  *     "goog.package.part".
@@ -752,6 +755,10 @@ goog.abstractMethod = function() {
  *     method to.
  */
 goog.addSingletonGetter = function(ctor) {
+  // instance_ is immediately set to prevent issues with sealed constructors
+  // such as are encountered when a constructor is returned as the export object
+  // of a goog.module in unoptimized code.
+  ctor.instance_ = undefined;
   ctor.getInstance = function() {
     if (ctor.instance_) {
       return ctor.instance_;
@@ -1188,8 +1195,8 @@ if (goog.DEPENDENCIES_ENABLED) {
             goog.writeScriptSrcNode_(src);
           }
         } else {
-          var state = " onreadystatechange='goog.onScriptLoad_(this, " +
-              ++goog.lastNonModuleScriptIndex_ + ")' ";
+          var state = ' onreadystatechange=\'goog.onScriptLoad_(this, ' +
+              ++goog.lastNonModuleScriptIndex_ + ')\' ';
           doc.write(
               '<script type="text/javascript" src="' + src + '"' + state +
               '></' +
@@ -1197,7 +1204,8 @@ if (goog.DEPENDENCIES_ENABLED) {
         }
       } else {
         doc.write(
-            '<script type="text/javascript">' + opt_sourceText + '</' +
+            '<script type="text/javascript">' +
+            goog.protectScriptTag_(opt_sourceText) + '</' +
             'script>');
       }
       return true;
@@ -1206,6 +1214,17 @@ if (goog.DEPENDENCIES_ENABLED) {
     }
   };
 
+  /**
+   * Rewrites closing script tags in input to avoid ending an enclosing script
+   * tag.
+   *
+   * @param {string} str
+   * @return {string}
+   * @private
+   */
+  goog.protectScriptTag_ = function(str) {
+    return str.replace(/<\/(SCRIPT)/ig, '\\x3c\\$1');
+  };
 
   /**
    * Determines whether the given language needs to be transpiled.
@@ -1962,7 +1981,9 @@ goog.bindJs_ = function(fn, selfObj, var_args) {
     };
 
   } else {
-    return function() { return fn.apply(selfObj, arguments); };
+    return function() {
+      return fn.apply(selfObj, arguments);
+    };
   }
 };
 
@@ -2202,7 +2223,9 @@ goog.getCssName = function(className, opt_modifier) {
     rename =
         goog.cssNameMappingStyle_ == 'BY_WHOLE' ? getMapping : renameByParts;
   } else {
-    rename = function(a) { return a; };
+    rename = function(a) {
+      return a;
+    };
   }
 
   var result =
