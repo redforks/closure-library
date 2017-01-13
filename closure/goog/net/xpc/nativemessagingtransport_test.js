@@ -277,7 +277,7 @@ function checkSignalConnected(
 function createMockEvent(data) {
   var event = {};
   event.getBrowserEvent = function() {
-    return { data: data }
+    return { data: data };
   };
   return event;
 }
