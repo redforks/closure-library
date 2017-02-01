@@ -19,6 +19,9 @@
  * global <code>CLOSURE_NO_DEPS</code> is set to true.  This allows projects to
  * include their own deps file(s) from different locations.
  *
+ * Avoid including base.js more than once. This is strictly discouraged and not
+ * supported. goog.require(...) won't work properly in that case.
+ *
  * @author arv@google.com (Erik Arvidsson)
  *
  * @provideGoog
@@ -135,7 +138,7 @@ goog.exportPath_ = function(name, opt_object, opt_objectToExportTo) {
     if (!parts.length && goog.isDef(opt_object)) {
       // last part and we have an object; use it
       cur[part] = opt_object;
-    } else if (cur[part]) {
+    } else if (cur[part] && Object.prototype.hasOwnProperty.call(cur, part)) {
       cur = cur[part];
     } else {
       cur = cur[part] = {};
@@ -345,6 +348,7 @@ goog.VALID_MODULE_RE_ = /^[a-zA-Z_$][a-zA-Z0-9._$]*$/;
  *
  * @param {string} name Namespace provided by this file in the form
  *     "goog.package.part", is expected but not required.
+ * @return {void}
  */
 goog.module = function(name) {
   if (!goog.isString(name) || !name ||
