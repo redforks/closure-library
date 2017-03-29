@@ -24,6 +24,7 @@ goog.require('goog.async.Deferred');
 goog.require('goog.db.Cursor');
 goog.require('goog.db.Error');
 goog.require('goog.db.Index');
+goog.require('goog.db.KeyRange');
 goog.require('goog.debug');
 goog.require('goog.events');
 
@@ -98,7 +99,9 @@ goog.db.ObjectStore.prototype.insert_ = function(fn, msg, value, opt_key) {
     d.errback(goog.db.Error.fromException(ex, msg));
     return d;
   }
-  request.onsuccess = function(ev) { d.callback(); };
+  request.onsuccess = function(ev) {
+    d.callback(ev.target.result);
+  };
   request.onerror = function(ev) {
     msg += goog.debug.deepExpose(value);
     if (opt_key) {
